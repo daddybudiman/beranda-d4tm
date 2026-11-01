@@ -1,0 +1,5 @@
+Folder rekaman suara beranda.
+nama.mp3     = bahasa Indonesia (suara Ardi)
+nama-en.mp3  = bahasa Inggris (suara Ryan)
+Isi dengan menjalankan BUAT_SUARA_BERANDA.bat (Windows) atau python buat_suara_beranda.py.
+Bila kosong, laman tetap bersuara memakai suara browser.
