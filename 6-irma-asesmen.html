@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>I/R/M/A & Assessment Plan — Kurikulum OBE D4 Teknik Manufaktur 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="aset/gaya.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header id="kop"></header>
+  <nav id="menu" aria-label="Menu enam laman"></nav>
+  <div id="bilah"></div>
+  <div id="intro"></div>
+  <div id="pil"></div>
+
+  <div class="controls">
+    <button class="ctl" id="allX">Buka keduanya</button>
+    <button class="ctl" id="offX">Tutup keduanya</button>
+  </div>
+
+  <div id="kisi-x"></div>
+  <div id="buka-x"></div>
+
+  <footer id="foot"></footer>
+</div>
+
+<script src="aset/logo.js"></script>
+<script src="aset/ikon.js"></script>
+<script src="aset/data.js"></script>
+<script src="aset/data-asesmen.js"></script>
+<script src="aset/suara.js"></script>
+<script src="aset/umum.js"></script>
+<script>
+const A = window.DATA_ASESMEN;
+pasangKop("Peta I/R/M/A dan Assessment Plan", "Kurikulum OBE D4 Teknik Manufaktur 2026 · Laman 6 dari 6");
+pasangMenu(6);
+SUARA.bilahSuara("bilah");
+pasangIntro("intro","timbang",["#EF9A9A","#B71C1C"],"Laman 6 — Peta Kurikulum & Rencana Asesmen",
+  "Peta Kurikulum menetapkan <b>di mana</b> setiap CPL dinilai; Assessment Plan menetapkan <b>dengan apa</b> dan <b>seberapa baik dianggap cukup</b>. Tanpa laman ini, dua puluh lima huruf <b>A</b> pada peta hanyalah tanda di atas kertas. Dua tombol di bawah masing-masing bersuara.");
+pasangPil("pil",[[52,"MK + 6 baris PKM"],[10,"CPL"],[140,"sel terisi"],[25,"titik asesmen"],[2,"rubrik penuh"],[15,"rubrik menyusul"]]);
+
+const NIVEAU = {I:"Introduced — diperkenalkan", R:"Reinforced — diperkuat", M:"Mastery — dikuasai", A:"Assessed — titik asesmen"};
+const KETLV = `<div class="ket"><span><span class="lv I">I</span> Introduced — diperkenalkan</span>
+  <span><span class="lv R">R</span> Reinforced — diperkuat</span>
+  <span><span class="lv M">M</span> Mastery — dikuasai</span>
+  <span><span class="lv A">A</span> Assessed — titik asesmen resmi</span></div>`;
+
+/* ---------- matriks besar 52 MK × 10 CPL ---------- */
+function matriks(){
+  const head = `<tr><th class="c" style="width:38px">No</th><th style="min-width:230px">Mata Kuliah</th><th class="c" style="width:40px">sks</th>`
+    + D.IRMA.cpl.map(c=>`<th class="c" style="width:42px" title="CPL-${c[0]} ${c[1]}">${c[0]}</th>`).join("") + `</tr>`;
+  const baris = D.IRMA.sem.map(s=>{
+    const kop = `<tr style="background:#dde8f5"><td colspan="13" class="nm">SEMESTER ${s.smt} — ${s.sks} sks · ${s.ket}</td></tr>`;
+    const isi = s.rows.map(r=>{
+      const pkm = r[0]==="★";
+      return `<tr class="${pkm?"pkm":""}"><td class="c">${r[0]}</td><td class="nm">${r[1]}</td><td class="c">${r[2]}</td>`
+        + D.IRMA.cpl.map(c=>{const lv=r[3][c[0]];return `<td class="c">${lv?`<span class="lv ${lv}" title="${NIVEAU[lv]}">${lv}</span>`:""}</td>`;}).join("")
+        + `</tr>`;
+    }).join("");
+    return kop+isi;
+  }).join("");
+  return `<div class="tbox"><table class="t"><thead>${head}</thead><tbody>${baris}</tbody>
+    <tfoot><tr><td colspan="2">52 mata kuliah + 6 baris PKM</td><td class="c">146</td>
+      ${D.IRMA.rekap.map(r=>`<td class="c" title="${r[0]}: ${r[1]} MK · ${r[4]} titik asesmen">${r[1]}</td>`).join("")}</tr></tfoot>
+  </table></div>${KETLV}`;
+}
+
+function rekapCPL(){
+  return `<div class="tbox"><table class="t">
+   <thead><tr><th class="c" style="width:62px">CPL</th><th>Rumusan</th><th class="c">Jml MK</th><th class="c">Jml sks</th><th class="c" title="I / R / M / A">I/R/M/A</th><th class="c">Titik A</th><th>Mata kuliah titik asesmen</th></tr></thead>
+   <tbody>${D.IRMA.rekap.map((r,i)=>`<tr><td class="c nm">${r[0]}</td><td>${D.IRMA.cpl[i][1]}</td>
+     <td class="c">${r[1]}</td><td class="c">${r[2]}</td><td class="c nm">${r[3]}</td><td class="c nm">${r[4]}</td><td>${r[5]}</td></tr>`).join("")}</tbody>
+  </table></div>`;
+}
+function profilSmt(){
+  return `<div class="tbox"><table class="t">
+   <thead><tr><th class="c">Semester</th><th class="c">sks</th><th class="c"><span class="lv I">I</span></th><th class="c"><span class="lv R">R</span></th><th class="c"><span class="lv M">M</span></th><th class="c"><span class="lv A">A</span></th><th>Watak semester</th></tr></thead>
+   <tbody>${D.IRMA.profil.map(p=>{
+     const w = p[3]>p[2]*2 ? (p[5]>=5?"Penguatan berat dengan banyak titik asesmen":"Penguatan") : (p[2]>p[3]?"Perkenalan":"Penguatan");
+     const w2 = p[0]==="VII"?"Pembuktian di dunia kerja":p[0]==="VIII"?"Puncak — penguasaan & asesmen menyeluruh":w;
+     return `<tr><td class="c nm">${p[0]}</td><td class="c">${p[1]}</td><td class="c">${p[2]||""}</td><td class="c">${p[3]||""}</td><td class="c">${p[4]||""}</td><td class="c">${p[5]||""}</td><td>${w2}</td></tr>`;}).join("")}</tbody>
+  </table></div>
+  <p class="jejak">Bentuk sebaran ini yang dibaca asesor: semester I–II didominasi <b>I</b> dan <b>R</b>, titik <b>A</b> baru muncul berarti dari semester III, memuncak di semester VII–VIII. Tidak ada CPL yang langsung diasesmen tanpa diperkenalkan dan diperkuat lebih dahulu.</p>`;
+}
+
+/* ---------- Assessment Plan ---------- */
+function apHtml(){
+  return `
+  <div class="rsec"><h4>Skala penilaian resmi PNP — rubrik analitik, skor 1–4</h4>
+    <div class="tbox" style="margin:6px 0 0"><table class="t">
+      <thead><tr><th class="c" style="width:56px">Skor</th><th class="c" style="width:94px">Rentang Nilai</th><th style="width:230px">Sebutan</th><th>Makna</th></tr></thead>
+      <tbody>${A.SKALA.map(s=>`<tr${s[0]===3?' style="background:#e9f7ec"':''}><td class="c nm">${s[0]}</td><td class="c nm">${s[1]}</td><td class="nm">${s[2]}</td><td>${s[3]}</td></tr>`).join("")}</tbody>
+    </table></div>
+    <p style="font-size:12px;color:#5b6678;margin-top:7px">Sumber: contoh <i>Rubrik Analitik Dalam Penilaian Tugas Kelompok</i> PNP yang berlaku — susunan kolom nilai tertinggi di kiri. Dengan memakainya, rubrik ini menyatu langsung dengan sistem nilai yang sudah berjalan, tanpa tabel konversi tersendiri.</p>
+  </div>
+
+  <div class="rsec" style="--c2:#C62828"><h4>Tiga ambang yang harus dibedakan</h4>
+    <div class="tbox" style="margin:6px 0 0"><table class="t">
+      <thead><tr><th style="width:230px">Ambang</th><th class="c" style="width:200px">Angkanya</th><th>Keterangan</th></tr></thead>
+      <tbody>${A.AMBANG.map((r,i)=>`<tr><td class="nm">${i+1}. ${r[0]}</td><td class="c">${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</tbody>
+    </table></div>
+    <p style="margin-top:8px;font-size:13px"><i>Nilai MK menjawab “apakah mahasiswa ini boleh lanjut?”. Skor CPL menjawab pertanyaan berbeda: “apakah <b>kurikulum ini</b> berhasil?”. Yang kedua yang dibaca asesor.</i></p>
+  </div>
+
+  <div class="rsec"><h4>25 titik asesmen — format Lampiran 8</h4>
+    <div class="tbox" style="margin:6px 0 0"><table class="t">
+      <thead><tr><th class="c" style="width:62px">CPL</th><th style="min-width:190px">MK Asesmen</th><th class="c" style="width:44px">Smt</th><th>Jenis Artefak</th><th>Metode / Instrumen</th><th>Penanggung Jawab</th></tr></thead>
+      <tbody>${A.AP25.map(r=>`<tr><td class="c nm">${r[0]}</td><td class="nm">${r[1]}</td><td class="c">${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td></tr>`).join("")}</tbody>
+    </table></div>
+    <p style="font-size:12px;color:#5b6678;margin-top:7px">Kolom <b>Tindak Lanjut</b> belum dimuat — isinya baru ada setelah satu siklus asesmen berjalan.</p>
+  </div>
+
+  <div class="rsec" style="--c2:#283593"><h4>Rubrik Magang Industri — 20 sks · semester VII · memikul 4 CPL</h4>
+    <p>Titik asesmen paling rawan di seluruh kurikulum, karena sebagian penilainya di luar kendali prodi. Buktinya dipecah <b>tiga berkas terpisah</b> — bukan satu nilai gabungan dari perusahaan.</p>
+    <div class="tbox" style="margin:6px 0 10px"><table class="t">
+      <thead><tr><th style="width:250px">Berkas bukti</th><th class="c" style="width:70px">Bobot</th><th>Keterangan</th><th class="c" style="width:120px">Menilai</th></tr></thead>
+      <tbody>${A.BUKTI_MAGANG.map(r=>`<tr><td class="nm">${r[0]}</td><td class="c nm">${r[1]}</td><td>${r[2]}</td><td class="c nm">${r[3]}</td></tr>`).join("")}</tbody>
+    </table></div>
+    ${tabelRubrik(A.RUBRIK_M,false)}
+    <div class="catat">🔴 <b>Formulir untuk pembimbing industri harus ditulis ulang.</b> Penyelia di pabrik tidak akan mengisi formulir yang berbunyi “menunjukkan kemandirian belajar berkelanjutan”. Dimensi M1, M2, M3 perlu dituangkan dalam <b>satu halaman berbahasa kerja sehari-hari</b> dengan kotak centang — misalnya “Datang tepat waktu tanpa diingatkan”, “Berani bertanya bila tidak paham”, “Pernah mengusulkan perbaikan cara kerja”. Ini penentu apakah <b>40% bobot magang</b> terisi penilaian bermakna, atau hanya diisi angka 85 untuk semua mahasiswa.</div>
+  </div>
+
+  <div class="rsec" style="--c2:#6A1B9A"><h4>Rubrik Capstone Design / Tugas Akhir — 8 sks · semester VIII · memikul 6 CPL</h4>
+    <p>Rubrik ini <b>wajib menghasilkan enam angka yang berdiri sendiri</b>, bukan satu nilai akhir. Bila panel penguji hanya memberi satu angka, enam CPL kehilangan buktinya sekaligus.</p>
+    ${tabelRubrik(A.RUBRIK_D,true)}
+    <p style="margin-top:8px;font-size:13px">Bobot dipakai untuk menghitung <b>nilai MK Tugas Akhir</b>. Untuk <b>pelaporan ketercapaian CPL</b>, keenam skor dilaporkan <b>terpisah dan tanpa dibobot</b> — CPL-4 tidak menjadi lebih tercapai hanya karena bobotnya 25%.</p>
+  </div>
+
+  <div class="rsec" style="--c2:#00695C"><h4>Pengumpulan data, analisis, dan <i>closing the loop</i></h4>
+    <div class="tbox" style="margin:6px 0 0"><table class="t">
+      <thead><tr><th style="width:180px">Tahap</th><th>Isi</th></tr></thead>
+      <tbody>${A.LOOP.map(r=>`<tr><td class="nm">${r[0]}</td><td>${r[1]}</td></tr>`).join("")}</tbody>
+    </table></div>
+    <p style="margin-top:8px;font-size:13px"><b>Nilai telusur-balik:</b> bila kelak <b>CPL-5 lemah</b>, prodi tidak perlu menebak — dokumen Pengetahuan menunjuk <b>P14 (metrologi & mutu)</b>, Peta Kurikulum menunjuk <b>Metrologi & Pengendalian Mutu (IV)</b> beserta lima MK penunjang lainnya. Inilah alasan seluruh rantai dokumen disusun berurutan.</p>
+  </div>
+
+  <div class="rsec" style="--c2:#8e1b1b"><h4>Sisa pekerjaan tahap berikutnya</h4>
+    <div class="tbox" style="margin:6px 0 0"><table class="t">
+      <thead><tr><th style="width:300px">Yang tersisa</th><th class="c" style="width:100px">Jumlah</th><th>Catatan</th></tr></thead>
+      <tbody>${A.SISA.map(r=>`<tr><td class="nm">${r[0]}</td><td class="c">${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</tbody>
+    </table></div>
+  </div>`;
+}
+function tabelRubrik(R, pakaiBobot){
+  return `<div class="tbox" style="margin:6px 0 0"><table class="t">
+   <thead><tr><th class="c" style="width:52px">Kode</th><th style="min-width:180px">Dimensi (CPL)</th>${pakaiBobot?'<th class="c" style="width:58px">Bobot</th>':""}
+     <th>Nilai 80–100 (Skor 4)</th><th style="background:#e9f7ec">Nilai 65–79 (Skor 3) ✦ target</th><th>Nilai 55–64 (Skor 2)</th><th>Nilai 0–54 (Skor 1)</th></tr></thead>
+   <tbody>${R.map(r=>`<tr><td class="c nm">${r[0]}</td><td class="nm">${r[1]}</td>${pakaiBobot?`<td class="c nm">${r[2]}</td>`:""}
+     <td>${r[3]}</td><td style="background:#f3fbf5">${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td></tr>`).join("")}</tbody>
+  </table></div>`;
+}
+
+/* ---------- dua tombol ON/OFF ---------- */
+const items = [
+ {id:"IRMA", kode:"PETA I/R/M/A", judul:"Peta Kurikulum — 52 MK × 10 CPL",
+  warna:["#F48FB1","#C2185B"], ikon:"petaIRMA",
+  meta:["140 sel terisi","25 titik A","8 semester"], jenis:"irma"},
+ {id:"AP", kode:"ASSESSMENT PLAN", judul:"Rencana Asesmen Tahap 1 — 25 titik & dua rubrik penuh",
+  warna:["#EF9A9A","#B71C1C"], ikon:"timbang",
+  meta:["Lampiran 8","rubrik analitik 1–4","ambang 70%"], jenis:"ap"}
+];
+const papan = buatPapan({
+  kisi:"kisi-x", buka:"buka-x", items, kolom:"ppm", isiKartu: x=>
+    x.jenis==="irma"
+    ? `<p>Tiga pertanyaan yang dijawab peta ini: apakah setiap CPL <b>diperkenalkan</b> sebelum <b>diperkuat</b>? apakah setiap CPL <b>diasesmen</b> sekurang-kurangnya sekali? dan apakah tingkat penguasaannya <b>naik</b> dari semester ke semester? Semua terbaca pada matriks di bawah.</p>
+       ${matriks()}
+       <div class="rsec" style="margin-top:12px"><h4>Rekapitulasi per CPL</h4>${rekapCPL()}</div>
+       <div class="rsec"><h4>Profil tingkat per semester</h4>${profilSmt()}</div>`
+    : apHtml()
+});
+document.getElementById("allX").onclick=()=>papan.semua();
+document.getElementById("offX").onclick=()=>papan.kosong();
+papan.pindah("IRMA",true);
+
+pasangFooter("Sumber: dokumen Project <i>Peta Kurikulum IRMA — 52 MK × 10 CPL</i> v4 · <i>Assessment Plan dan Rubrik — Tahap 1</i> v2 · Lampiran 8 & Lampiran 9 Panduan Penyusunan Kurikulum PNP 2025");
+</script>
+</body>
+</html>

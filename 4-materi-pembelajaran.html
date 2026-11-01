@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Materi Pembelajaran (MP) — Kurikulum OBE D4 Teknik Manufaktur 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="aset/gaya.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header id="kop"></header>
+  <nav id="menu" aria-label="Menu enam laman"></nav>
+  <div id="bilah"></div>
+  <div id="intro"></div>
+  <div id="pil"></div>
+
+  <div class="controls">
+    <label class="ctl" style="display:flex;align-items:center;gap:8px;cursor:text">🔍
+      <input id="cari" type="search" placeholder="Cari butir MP — misal: las, toleransi, PLC, turbin…"
+             style="font:inherit;font-size:13px;font-weight:600;border:0;background:transparent;outline:none;width:290px">
+    </label>
+    <button class="ctl" id="allMP">Semua kelompok ON</button>
+    <button class="ctl" id="offMP">Semua OFF</button>
+  </div>
+  <div id="hasil"></div>
+
+  <section class="lvl">
+    <div class="ghead"><span class="gnum" style="background:linear-gradient(140deg,#A5D6A7,#2E7D32)">26</span>
+      <div><h2>Materi Pembelajaran menurut Pengetahuan penopangnya</h2>
+        <div class="sub">Tekan satu kelompok untuk membuka seluruh butir MP di bawahnya dan mendengarkannya dibacakan</div></div></div>
+    <div id="kisi-mp"></div>
+    <div id="buka-mp"></div>
+  </section>
+
+  <div class="flow"><span></span></div>
+
+  <section class="lvl">
+    <div class="ghead"><span class="gnum" style="background:linear-gradient(140deg,#FFB74D,#E8590C)">★</span>
+      <div><h2>Harmonisasi — pengulangan yang disengaja</h2>
+        <div class="sub">Dinyatakan di sini agar tidak dihapus orang lain sebagai "duplikasi"</div></div></div>
+    <div id="harmoni"></div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<script src="aset/logo.js"></script>
+<script src="aset/ikon.js"></script>
+<script src="aset/data.js"></script>
+<script src="aset/suara.js"></script>
+<script src="aset/umum.js"></script>
+<script>
+pasangKop("Materi Pembelajaran (MP)", "Kurikulum OBE D4 Teknik Manufaktur 2026 · Laman 4 dari 6");
+pasangMenu(4);
+SUARA.bilahSuara("bilah");
+pasangIntro("intro","tumpukMP",["#A5D6A7","#2E7D32"],"Laman 4 — Materi Pembelajaran",
+  `<b>${D.TOT_MP} butir</b> Materi Pembelajaran bernaung di bawah 26 Pengetahuan. MP adalah satuan terkecil kurikulum: dari sinilah bahan kajian mingguan RPS diturunkan, dengan perhitungan <b>1 sks = 45 jam per semester</b> (BT + PT + M, metode Lampiran 5 Panduan PNP 2025). Setiap kelompok memakai lambang dan warna Pengetahuan induknya, sehingga mudah ditelusuri kembali ke Laman 3.`);
+pasangPil("pil",[[D.TOT_MP,"butir MP"],[26,"kelompok P"],[52,"MK diuji balik"],["+22","dari versi 2 (163 MP)"]]);
+
+/* ---------- 26 kelompok MP ---------- */
+const items = D.P_LIST.map(p=>({
+  id:"MP-"+p.no, kode:"MP"+p.no+".1 – MP"+p.no+"."+p.mp.length,
+  judul:p.nama, warna:p.warna, ikon:p.ikon,
+  meta:[p.id, p.mp.length+" butir", p.sks+" sks"],
+  p:p
+}));
+const isiKartuMP = x => `
+  <div class="rbar">
+    <span class="rp s">${x.p.id} · ${x.p.pilarNama}</span>
+    <span class="rp">${x.p.mp.length} butir</span>
+    ${x.p.ubah?`<span class="rp w">v2: ${x.p.v2} → ${x.p.ubah}</span>`:""}
+  </div>
+  <ul class="mplist">${x.p.mp.map(m=>`<li><span class="kd">${m.kode}</span><span>${m.teks}</span></li>`).join("")}</ul>
+  <div class="rsec" style="margin-top:12px"><h4>Mata kuliah yang mengampu butir-butir ini</h4><p>${x.p.mk}</p></div>
+  ${x.p.catatan?`<div class="catat">⚠ ${x.p.catatan}</div>`:""}`;
+
+const papan = buatPapan({kisi:"kisi-mp", buka:"buka-mp", items, kolom:"p", isiKartu:isiKartuMP});
+document.getElementById("allMP").onclick=()=>papan.semua();
+document.getElementById("offMP").onclick=()=>papan.kosong();
+
+/* ---------- pencarian lintas 185 butir ---------- */
+const SEMUA_MP = D.P_LIST.flatMap(p=>p.mp.map(m=>({...m, p})));
+const hasil=document.getElementById("hasil");
+document.getElementById("cari").addEventListener("input",e=>{
+  const q=e.target.value.trim().toLowerCase();
+  if(q.length<2){ hasil.innerHTML=""; return; }
+  const ket=SEMUA_MP.filter(m=>m.teks.toLowerCase().includes(q)||m.kode.toLowerCase().includes(q)||m.p.nama.toLowerCase().includes(q));
+  hasil.innerHTML = `<div class="card" style="--c1:#FFE082;--c2:#E8590C;margin-bottom:16px">
+    <div class="dh"><span class="dot"></span><b>${ket.length} butir memuat “${e.target.value}”</b></div>
+    ${ket.length?`<ul class="mplist">${ket.map(m=>`<li><span class="kd" style="--c1:${m.p.warna[0]};--c2:${m.p.warna[1]}">${m.kode}</span>
+      <span>${m.teks.replace(new RegExp("("+q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","gi"),"<b>$1</b>")}
+      <br><span style="font-size:11.5px;font-weight:700;color:#5b6678">${m.p.id} — ${m.p.nama}</span></span></li>`).join("")}</ul>`
+      :`<p>Tidak ada butir yang cocok. Coba kata lain, misalnya <i>las</i>, <i>cetakan</i>, <i>sensor</i>, <i>limbah</i>.</p>`}
+  </div>`;
+});
+
+/* ---------- harmonisasi ---------- */
+const SENGAJA = [
+ ["Keselamatan","MP4.8 (mesin perkakas) · MP11.5 (operasi press) · MP15.2 (kelistrikan) · MP16.7 (otomasi & LOTO) · MP23.1–23.3 (K3 umum)","Bahaya press ≠ bahaya listrik ≠ bahaya sistem otomasi yang bergerak sendiri"],
+ ["Statistika","MP1.4–1.5 (asas) → MP14.4 (SPC) → MP26.4 (data penelitian)","Rantai prasyarat, bukan pengulangan"],
+ ["Pengujian & pengukuran","MP3.4–3.5 (bahan, NDT) · MP5.7 (NDT lasan) · MP7.5 (uji lapisan) · MP14.2 (dimensi)","Objek dan standar penerimaannya berbeda"],
+ ["Pengolahan data","MP1.4 (statistika dasar) → MP17.5 (penyajian data proses) → MP17.6 (analitik data mesin)","Tiga lapisan kedalaman"],
+ ["Toleransi","MP9.4 (linear) · MP9.5 (GD&T) · MP12.6 (stack-up) · MP14.3 (pemeriksaan)","Menetapkan, menafsirkan, menumpuk, dan memeriksa = empat pekerjaan berbeda"]
+];
+const BEDA = [
+ ["MP3.9 kegagalan material vs MP18.6 kerusakan mesin","Mengapa <i>bahannya</i> gagal vs mengapa <i>mesinnya</i> berhenti"],
+ ["MP20.5 risiko proyek vs MP23.2 risiko K3","Biaya/jadwal/mutu vs keselamatan pekerja (kerangka hukum tersendiri)"],
+ ["P11 perkakas pembentuk vs P12 alat bantu produksi","<b>Membentuk material</b> vs <b>memegang & memandu</b> benda kerja"],
+ ["P6 pengecoran vs P7 pelapisan","Pembentukan dari <b>logam cair</b> vs <b>rekayasa permukaan</b>"],
+ ["MP17.1 algoritma vs MP16.5 pemrograman PLC","Pemrograman umum untuk pengolahan data vs pemrograman kendali mesin dengan diagram tangga"]
+];
+document.getElementById("harmoni").innerHTML = `
+ <div class="tbox"><table class="t">
+  <thead><tr><th style="min-width:150px">Tumpang tindih yang disengaja</th><th>Butir yang terlibat</th><th>Pembedanya</th></tr></thead>
+  <tbody>${SENGAJA.map(r=>`<tr><td class="nm">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("")}</tbody>
+ </table></div>
+ <div class="tbox"><table class="t">
+  <thead><tr><th style="min-width:230px">Pasangan yang perlu dijaga saat menyusun RPS</th><th>Pembedanya</th></tr></thead>
+  <tbody>${BEDA.map(r=>`<tr><td class="nm">${r[0]}</td><td>${r[1]}</td></tr>`).join("")}</tbody>
+ </table></div>
+ <div class="catat">⚠ <b>Temuan 3 — penomoran.</b> Berkas rincian v2 tidak tersedia saat penyusunan ulang. Kode yang sudah terlanjur dirujuk di RPS Semester I, Peta Kurikulum, dan Assessment Plan telah dipertahankan kedudukannya; kode lainnya mungkin bergeser. <b>Seluruh rujukan MP di RPS wajib dicocokkan sekali lagi terhadap daftar laman ini sebelum RPS disahkan.</b></div>`;
+
+pasangFooter("Sumber: dokumen Project <i>Pengetahuan (P) dan Materi Pembelajaran (MP) Pendukung CPL</i> v3 — 26 P · "+D.TOT_MP+" MP, diuji balik terhadap 52 MK struktur final");
+</script>
+</body>
+</html>

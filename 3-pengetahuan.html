@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pengetahuan (P) — Kurikulum OBE D4 Teknik Manufaktur 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="aset/gaya.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header id="kop"></header>
+  <nav id="menu" aria-label="Menu enam laman"></nav>
+  <div id="bilah"></div>
+  <div id="intro"></div>
+  <div id="pil"></div>
+
+  <div class="controls">
+    <button class="ctl" id="allP">Semua P ON</button>
+    <button class="ctl" id="offP">Semua OFF</button>
+  </div>
+
+  <div id="kelompok"></div>
+
+  <section class="lvl" style="margin-top:26px">
+    <div class="ghead"><span class="gnum" style="background:linear-gradient(140deg,#FFB74D,#E8590C)">★</span>
+      <div><h2>Matriks CPL × Pengetahuan</h2><div class="sub">Setiap CPL wajib ditopang sekurang-kurangnya satu P — tidak boleh ada CPL menggantung</div></div></div>
+    <div id="matriks"></div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<script src="aset/logo.js"></script>
+<script src="aset/ikon.js"></script>
+<script src="aset/data.js"></script>
+<script src="aset/suara.js"></script>
+<script src="aset/umum.js"></script>
+<script>
+pasangKop("Pengetahuan (P)", "Kurikulum OBE D4 Teknik Manufaktur 2026 · Laman 3 dari 6");
+pasangMenu(3);
+SUARA.bilahSuara("bilah");
+pasangIntro("intro","daftarP",["#80DEEA","#00838F"],"Laman 3 — Pengetahuan (P)",
+  "Pengetahuan adalah penjabaran CPL ke arah <b>isi</b> — sejajar dengan IK-CPL yang menjabarkannya ke arah <b>pengukuran</b>. Dua puluh enam butir ini disusun mengikuti <b>Four Pillars of Manufacturing Engineering</b> (Society of Manufacturing Engineers) sebagai <i>Body of Knowledge</i>, lalu diuji balik terhadap 52 mata kuliah struktur final. Tekan satu tombol untuk membuka rinciannya beserta seluruh Materi Pembelajaran di bawahnya.");
+pasangPil("pil",[[26,"Pengetahuan"],[D.TOT_MP,"Materi Pembelajaran"],[6,"kelompok pilar"],[10,"CPL ditopang"]]);
+
+/* ---------- warna induk tiap kelompok pilar (POLA KERJA butir 4) ---------- */
+const WARNA_PILAR = {
+  F:  ["#CE93D8","#6A1B9A"],
+  P1: ["#90CAF9","#0D47A1"],
+  P2: ["#80DEEA","#00838F"],
+  P3: ["#FFE082","#F9A825"],
+  P4: ["#A5D6A7","#2E7D32"],
+  PP: ["#F8BBD0","#C2185B"]
+};
+const KET_PILAR = {
+  F:  "Landasan matematika dan sains yang menopang seluruh pengetahuan keteknikan",
+  P1: "Material dan proses manufaktur — pemesinan, pengelasan, pengecoran, pelapisan, polimer",
+  P2: "Produk, perkakas, dan perakitan — gambar teknik, elemen mesin, perancangan perkakas, CAM",
+  P3: "Sistem dan operasi manufaktur — mutu, kelistrikan, otomasi, digitalisasi, perawatan, PPIC",
+  P4: "Daya saing manufaktur — ekonomi teknik, kewirausahaan, energi, keberlanjutan",
+  PP: "Penunjang profesional — etika dan nilai, komunikasi, metodologi penelitian"
+};
+
+function isiKartuP(x){
+  return `
+   <div class="rbar">
+     <span class="rp s">${x.pilarNama}</span>
+     <span class="rp">${x.sks} sks penopang</span>
+     <span class="rp">${x.mp.length} Materi Pembelajaran</span>
+     ${x.ubah?`<span class="rp w">v2: ${x.v2} MP → ${x.ubah}</span>`:`<span class="rp">tidak berubah dari v2 (${x.v2} MP)</span>`}
+   </div>
+   <div class="rsec" style="margin-top:10px">
+     <h4>Capaian yang ditopang</h4>
+     <div class="tags">${x.cpl.map(c=>`<span class="tag s">${c}</span>`).join("")}</div>
+   </div>
+   <div class="rsec">
+     <h4>Mata kuliah penopang</h4>
+     <p>${x.mk}</p>
+   </div>
+   <div class="rsec">
+     <h4>Materi Pembelajaran (${x.mp.length} butir)</h4>
+     <ul class="mplist">${x.mp.map(m=>`<li><span class="kd">${m.kode}</span><span>${m.teks}</span></li>`).join("")}</ul>
+   </div>
+   ${x.catatan?`<div class="catat">⚠ ${x.catatan}</div>`:""}`;
+}
+
+const papan = [];
+const host = document.getElementById("kelompok");
+Object.keys(WARNA_PILAR).forEach((kp,i)=>{
+  const anggota = D.P_LIST.filter(p=>p.pilar===kp);
+  if(!anggota.length) return;
+  const w = WARNA_PILAR[kp];
+  const s = document.createElement("section"); s.className="lvl";
+  s.innerHTML = `
+   ${i>0?'<div class="flow"><span></span></div>':''}
+   <div class="ghead"><span class="gnum" style="background:linear-gradient(140deg,${mix(w[0],"#ffffff",.2)},${w[1]})">${anggota.length}</span>
+     <div><h2>${D.PILAR[kp]}</h2><div class="sub">${KET_PILAR[kp]}</div></div></div>
+   <div id="kisi-${kp}"></div><div id="buka-${kp}"></div>`;
+  host.appendChild(s);
+  papan.push(buatPapan({
+    kisi:"kisi-"+kp, buka:"buka-"+kp, kolom:"p", isiKartu:isiKartuP,
+    items: anggota.map(p=>({...p, kode:p.id,
+      judul:p.nama,
+      meta:[p.sks+" sks", p.mp.length+" MP", ...p.cpl.slice(0,3)]}))
+  }));
+});
+document.getElementById("allP").onclick=()=>papan.forEach(p=>p.semua());
+document.getElementById("offP").onclick=()=>papan.forEach(p=>p.kosong());
+
+/* ---------- matriks CPL × P ---------- */
+document.getElementById("matriks").innerHTML = `
+ <div class="tbox"><table class="t">
+  <thead><tr><th style="min-width:72px">CPL</th><th>Rumusan ringkas</th><th>Pengetahuan penopang</th><th class="c">Jml</th></tr></thead>
+  <tbody>${D.CPLxP.map(([c,n,p])=>`<tr>
+    <td class="nm">${c}</td><td>${n}</td>
+    <td>${p.split(/,\s*/).map(k=>`<span class="tag" style="background:${(D.P_LIST.find(x=>x.id===k)||{warna:["#eef2f7","#384356"]}).warna[1]};color:#fff">${k}</span>`).join(" ")}</td>
+    <td class="c nm">${p.split(/,\s*/).length}</td></tr>`).join("")}</tbody>
+ </table></div>`;
+
+pasangFooter("Sumber: dokumen Project <i>Pengetahuan (P) dan Materi Pembelajaran (MP) Pendukung CPL</i> v3 · Four Pillars of Manufacturing Engineering (SME) · Tabel 2 & Tabel 3 Panduan PNP 2025 (delapan jenis pengetahuan · pengetahuan operasional lengkap, KKNI Jenjang 6)");
+</script>
+</body>
+</html>

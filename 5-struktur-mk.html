@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Struktur Mata Kuliah — Kurikulum OBE D4 Teknik Manufaktur 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="aset/gaya.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header id="kop"></header>
+  <nav id="menu" aria-label="Menu enam laman"></nav>
+  <div id="bilah"></div>
+  <div id="intro"></div>
+  <div id="pil"></div>
+
+  <div class="modebar" id="modebar">
+    <button class="ctl mode" id="mTabel" aria-pressed="true">▤ Tampilan Tabel</button>
+    <button class="ctl mode" id="mKartu" aria-pressed="false">▣ Tampilan Kartu</button>
+    <span class="modeket" id="modeket"></span>
+  </div>
+
+  <!-- ============ TAMPILAN TABEL — 8 tabel sebaran per semester ============ -->
+  <div id="tampil-tabel">
+    <div class="controls">
+      <button class="ctl" id="tutupRinci">Tutup rincian yang terbuka</button>
+      <button class="ctl" id="salinTabel">⧉ Salin tabel (Word / Excel)</button>
+      <button class="ctl" id="cetakTabel">🖨 Cetak</button>
+      <button class="ctl" id="simpanTetap">💾 Simpan tetap (unduh kode-rps.js)</button>
+      <button class="ctl" id="hapusIsian">Hapus isian saya</button>
+    </div>
+    <div class="jejak" id="isianKet"></div>
+    <div id="daftar-smt"></div>
+    <div id="total-sks"></div>
+  </div>
+
+  <!-- ============ TAMPILAN KARTU — tombol ON/OFF per semester ============ -->
+  <div id="tampil-kartu" hidden>
+    <nav class="menu" id="smtmenu" aria-label="Pilih semester"></nav>
+
+    <div class="controls">
+      <button class="ctl" id="allMK">Semua MK semester ini ON</button>
+      <button class="ctl" id="offMK">Semua OFF</button>
+    </div>
+
+    <section class="lvl" id="bagian-smt">
+      <div class="ghead" id="smt-head"></div>
+      <div class="sinfo" id="smt-info"></div>
+      <div id="kisi-mk"></div>
+      <div id="buka-mk"></div>
+    </section>
+  </div>
+
+  <footer id="foot"></footer>
+</div>
+
+<script src="aset/logo.js"></script>
+<script src="aset/ikon.js"></script>
+<script src="aset/data.js"></script>
+<script src="aset/kode-rps.js"></script>
+<script src="aset/suara.js"></script>
+<script src="aset/umum.js"></script>
+<script>
+pasangKop("Struktur Mata Kuliah", "Kurikulum OBE D4 Teknik Manufaktur 2026 · Laman 5 dari 6");
+pasangMenu(5);
+SUARA.bilahSuara("bilah");
+pasangIntro("intro","kalender",["#FFCC80","#E8590C"],"Laman 5 — Struktur Mata Kuliah per Semester",
+  "Lima puluh dua mata kuliah, <b>146 sks</b>, delapan semester. Tersedia <b>dua tampilan</b>: <b>Tabel</b> — delapan daftar sebaran per semester lengkap dengan kolom Kode MK dan Link RPS, bentuk yang siap disalin ke Buku Kurikulum; dan <b>Kartu</b> — tombol hidup-mati bergambar untuk presentasi. Pada keduanya, <b>menekan nama mata kuliah</b> membuka rinciannya: beban jam, kelompok, bentuk pembelajaran, Pengetahuan penopang beserta Materi Pembelajarannya, CPL yang dipikul dengan tingkat I/R/M/A, status titik asesmen, prasyarat, dan RPS-nya.");
+pasangPil("pil",[[52,"mata kuliah"],[146,"sks"],[8,"semester"],[20,"sks magang (smt VII)"],[8,"sks capstone (smt VIII)"],[3,"MK penciri"]]);
+
+const SMT = D.SMT_LIST;
+const NIVEAU = {I:"Introduced — diperkenalkan", R:"Reinforced — diperkuat", M:"Mastery — dikuasai", A:"Assessed — titik asesmen"};
+let aktifSmt = 0, papan = null;
+
+/* ---------- bilah semester, masing-masing bersuara ---------- */
+const sm = document.getElementById("smtmenu");
+sm.style.gridTemplateColumns = "repeat(auto-fit,minmax(132px,1fr))";
+sm.innerHTML = SMT.map((s,i)=>`
+  <a class="mitem" href="#bagian-smt" data-smt="${i}"
+     style="--c1:${s.warna[0]};--c2:${s.warna[1]};--l1:${mix(s.warna[0],"#ffffff",.62)};--l2:${mix(s.warna[1],"#ffffff",.72)};--d1:${mix(s.warna[1],"#000000",.18)};--d2:${mix(s.warna[1],"#000000",.48)}">
+    <button class="spk" type="button" data-spk="${s.id}" aria-pressed="false" title="Dengarkan sebaran semester ${s.romawi}">
+      <svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9c1.5 1.5 1.5 4.5 0 6M19 6c3 3 3 9 0 12"/></svg></button>
+    <span class="mtop"><span class="mbadge"><svg viewBox="0 0 48 48" aria-hidden="true">${ICONS[s.ikon]}</svg></span></span>
+    <span class="mno">SEMESTER</span>
+    <span class="mjudul">${s.romawi}</span>
+    <span class="mket">${s.sks} sks · ${s.mk.length} MK</span>
+  </a>`).join("");
+SMT.forEach(s=>SUARA.daftar(s.id,"audio/"+s.id.toLowerCase()+".mp3"));
+sm.querySelectorAll("[data-smt]").forEach(a=>a.addEventListener("click",ev=>{
+  if(ev.target.closest("[data-spk]")) return;
+  pilihSmt(+a.dataset.smt);
+}));
+sm.querySelectorAll("[data-spk]").forEach(b=>b.addEventListener("click",ev=>{
+  ev.preventDefault(); ev.stopPropagation();
+  const id=b.dataset.spk;
+  if(SUARA.sedangPutar(id)) SUARA.hentikan(); else SUARA.putar(id, D.TEKS_SUARA[id]);
+}));
+SUARA.pendengar.push(aktif=>{
+  sm.querySelectorAll("[data-spk]").forEach(b=>b.setAttribute("aria-pressed", b.dataset.spk===aktif));
+});
+
+/* ---------- rincian satu mata kuliah ---------- */
+function isiKartuMK(x){
+  const m = x.mk;
+  const pDet = m.p.filter(k=>/^P\d+$/.test(k)).map(k=>D.P_LIST.find(p=>p.id===k)).filter(Boolean);
+  const rps = D.RPS[m.id];
+  const alokasi = D.ALOKASI_SMT1[m.id];
+  const cplBaris = Object.entries(m.irma).sort((a,b)=>a[0]-b[0]);
+
+  return `
+  <div class="rbar">
+    <span class="rp s">Semester ${m.smt}</span>
+    <span class="rp">${m.sks} sks${m.jam?` · ${m.jam} jam/semester`:""}</span>
+    <span class="rp">${m.kel}</span>
+    <span class="rp">Kode MK: <b>${kodeMK(m.id)||m.kode}</b>${kodeMK(m.id)?"":" (menunggu BAAK)"}</span>
+    ${m.asesmen.length?`<span class="rp" style="background:#C62828;color:#fff">TITIK ASESMEN</span>`:""}
+    ${m.kel==="PENCIRI"?`<span class="rp" style="background:#2E7D32;color:#fff">MK PENCIRI PRODI</span>`:""}
+  </div>
+
+  <div class="rinci">
+    <div class="rsec">
+      <h4>Identitas & bentuk pembelajaran</h4>
+      <dl class="kv">
+        <dt>Bentuk</dt><dd>${m.bentuk}</dd>
+        <dt>Beban jam</dt><dd>${m.jam?`${m.sks} sks × 45 jam = <b>${m.jam} jam/semester</b> (BT + PT + M, metode Lampiran 5 Panduan PNP 2025)`:"—"}</dd>
+        <dt>Prasyarat</dt><dd>${m.pra.length?m.pra.map(p=>`<span class="tag">${p}</span>`).join(" "):"<i>tanpa prasyarat</i>"}</dd>
+        <dt>Nomor urut</dt><dd>MK ke-${m.no} dari 52 pada Peta Kurikulum I/R/M/A</dd>
+      </dl>
+    </div>
+
+    <div class="rsec">
+      <h4>CPL yang dipikul & tingkatnya</h4>
+      <div class="tbox" style="margin:0"><table class="t">
+        <thead><tr><th class="c" style="width:62px">CPL</th><th>Rumusan ringkas</th><th class="c" style="width:72px">Tingkat</th><th>Arti</th></tr></thead>
+        <tbody>${cplBaris.map(([no,lv])=>{
+          const nm=(D.IRMA.cpl.find(c=>c[0]==+no)||[,"—"])[1];
+          return `<tr><td class="c nm">CPL-${no}</td><td>${nm}</td><td class="c"><span class="lv ${lv}">${lv}</span></td><td>${NIVEAU[lv]}</td></tr>`;
+        }).join("")}</tbody>
+      </table></div>
+    </div>
+
+    <div class="rsec">
+      <h4>Pengetahuan penopang & Materi Pembelajaran</h4>
+      ${pDet.length ? pDet.map(p=>`
+        <p style="margin-top:4px"><b style="color:${p.warna[1]}">${p.id} — ${p.nama}</b>
+          <span class="tag">${p.mp.length} MP</span> <span class="tag">${p.sks} sks penopang</span></p>
+        <ul class="mplist" style="--c1:${p.warna[0]};--c2:${p.warna[1]}">${p.mp.map(b=>`<li><span class="kd">${b.kode}</span><span>${b.teks}</span></li>`).join("")}</ul>`).join('<hr style="border:0;border-top:1px solid #e3e8f0;margin:12px 0">')
+        : `<p><i>${m.p.join(", ")}</i> — mata kuliah ini memikul seluruh Pengetahuan secara terpadu.</p>`}
+      ${alokasi?`<div class="catat" style="color:#0d4f1c;background:#e9f7ec;border-left-color:#2E7D32">✔ <b>Alokasi bahan kajian semester I yang sudah ditetapkan:</b> ${alokasi}</div>`:""}
+    </div>
+
+    ${m.asesmen.length?`
+    <div class="rsec" style="--c2:#C62828">
+      <h4>Titik asesmen resmi</h4>
+      <div class="tbox" style="margin:0"><table class="t">
+        <thead><tr><th class="c" style="width:72px">CPL</th><th>Instrumen penilaian</th></tr></thead>
+        <tbody>${m.asesmen.map(a=>`<tr><td class="c nm">${a.cpl}</td><td>${a.instrumen}</td></tr>`).join("")}</tbody>
+      </table></div>
+      <p style="margin-top:8px;font-size:12.5px;color:#5b6678">Ambang: <b>skor 3 = nilai 65</b> untuk tiap mahasiswa · <b>70% kohort</b> pada tingkat program studi. Bila ≥30% mahasiswa tidak mencapai ambang, tindak lanjut perbaikan wajib dilakukan.</p>
+    </div>`:""}
+
+    <div class="rsec" style="--c2:${rps?"#2E7D32":"#8e1b1b"}">
+      <h4>Rencana Pembelajaran Semester (RPS)</h4>
+      ${rps?`<span class="status ada">RPS lengkap tersedia</span>
+        <p style="margin-top:8px">Formulir resmi <b>${rps.form}</b></p>
+        <details style="margin-top:8px"><summary style="cursor:pointer;font-weight:800;font-size:13px;color:#2E7D32">Buka isi RPS lengkap ▾</summary>
+          ${rpsHtml(rps)}
+        </details>`
+       :`<span class="status belum">RPS belum disusun</span>
+         <p style="margin-top:8px">Yang diperlukan untuk menyusunnya: <b>kode MK dari BAAK</b> · <b>IK-CPL</b> (2–4 indikator terukur per CPL — belum ada, harus mendahului seluruh RPS) · nama dosen pengampu · pustaka utama dan pendukung · rubrik penilaian A–E.</p>
+         <p style="font-size:12.5px;color:#5b6678">Formulir yang akan dipakai: <b>No.1/PL9.22/KR.01.02/2024 (Revisi 3)</b>, ditetapkan PPMPP — 10 kolom tabel mingguan, istilah <b>CPMK</b>, kode evaluasi <b>CM · TBP · TGS · QIZ · UTS · UAS</b>, rubrik A–E menyatu di dalam RPS.</p>`}
+    </div>
+
+    ${m.catat?`<div class="catat">⚠ ${m.catat}</div>`:""}
+  </div>`;
+}
+
+function rpsHtml(r){
+  return `
+  <div class="rpsbox" style="margin-top:12px">
+    <div><b>CPL-Prodi yang dibebankan</b>
+      <div class="tbox" style="margin:6px 0 0"><table class="t">
+        <thead><tr><th class="c" style="width:62px">CPL</th><th style="width:150px">Aspek</th><th>Rumusan</th></tr></thead>
+        <tbody>${r.cplBeban.map(b=>`<tr><td class="c nm">${b[0]}</td><td>${b[1]}</td><td>${b[2]}</td></tr>`).join("")}</tbody>
+      </table></div></div>
+
+    <div><b>CPMK & pemetaannya terhadap CPL</b>
+      <div class="tbox" style="margin:6px 0 0"><table class="t">
+        <thead><tr><th class="c" style="width:76px">CPMK</th><th>Rumusan</th>${r.cplBeban.map(b=>`<th class="c" style="width:58px">${b[0]}</th>`).join("")}</tr></thead>
+        <tbody>${r.cpmk.map(c=>`<tr><td class="c nm">${c[0]}</td><td>${c[1]}</td>
+          ${r.cplBeban.map(b=>`<td class="c">${c[2].includes(b[0])?"<b>✓</b>":""}</td>`).join("")}</tr>`).join("")}</tbody>
+      </table></div></div>
+
+    <div><b>Deskripsi mata kuliah</b><p style="font-size:13px;margin:6px 0 0">${r.deskripsi}</p></div>
+
+    <div><b>Rencana pembelajaran 16 pertemuan</b>
+      <p style="font-size:12px;color:#5b6678;margin:4px 0">${r.catatanMinggu}</p>
+      <div class="tbox" style="margin:6px 0 0"><table class="rps-t">
+        <thead><tr><th class="c">Pert.</th><th>KAD</th><th>Materi Pembelajaran</th><th>Modalitas · Bentuk · Strategi · Metode</th><th class="c">Waktu<br>(menit)</th><th>Pengalaman Belajar</th><th>Teknik/Kriteria</th><th>Indikator</th><th class="c">Bobot<br>(%)</th><th class="c">Ket.</th></tr></thead>
+        <tbody>${r.minggu.map(w=>`<tr>
+          <td class="c nm">${w[0]}</td><td>${w[1]}</td><td>${w[2]}</td><td>${w[3]}</td>
+          <td class="c">${w[4]}</td><td>${w[5]}</td><td>${w[6]}</td><td>${w[7]}</td>
+          <td class="c nm">${w[8]}</td><td class="c nm">${w[9]}</td></tr>`).join("")}</tbody>
+        <tfoot><tr><td colspan="8">Jumlah bobot</td><td class="c">${r.minggu.reduce((a,w)=>a+w[8],0)}</td><td></td></tr></tfoot>
+      </table></div></div>
+
+    <div><b>Rencana Evaluasi</b>
+      <div class="tbox" style="margin:6px 0 0"><table class="t">
+        <thead><tr><th class="c">No</th><th>Basis Evaluasi</th><th class="c">Kode</th><th>Deskripsi</th><th>Deskripsi (English)</th><th class="c">Bobot (%)</th></tr></thead>
+        <tbody>${r.evaluasi.map(e=>`<tr><td class="c">${e[0]}</td><td>${e[1]}</td><td class="c nm">${e[2]}</td><td>${e[3]}</td><td><i>${e[4]}</i></td><td class="c nm">${e[5]}</td></tr>`).join("")}</tbody>
+        <tfoot><tr><td colspan="5">Jumlah</td><td class="c">${r.evaluasi.reduce((a,e)=>a+e[5],0)}</td></tr></tfoot>
+      </table></div></div>
+
+    <div><b>${r.rubrikE.judul}</b>
+      <p style="font-size:12px;color:#5b6678;margin:4px 0">Pita nilai: ${r.rubrikE.pita}</p>
+      <div class="tbox" style="margin:6px 0 0"><table class="t">
+        <thead><tr><th style="width:190px">Kriteria</th><th>Skor 4 (80–100)</th><th>Skor 3 (65–79)</th><th>Skor 2 (55–64)</th><th>Skor 1 (0–54)</th></tr></thead>
+        <tbody>${r.rubrikE.baris.map(b=>`<tr><td class="nm">${b[0]}</td><td>${b[1]}</td><td>${b[2]}</td><td>${b[3]}</td><td>${b[4]}</td></tr>`).join("")}</tbody>
+      </table></div></div>
+
+    <div class="catat">⚠ ${r.peringatan}</div>
+  </div>`;
+}
+
+/* ---------- pilih semester ---------- */
+function pilihSmt(i){
+  aktifSmt = i;
+  const s = SMT[i];
+  sm.querySelectorAll("[data-smt]").forEach(a=>a.classList.toggle("aktif", +a.dataset.smt===i));
+  document.getElementById("smt-head").innerHTML =
+    `<span class="gnum" style="background:linear-gradient(140deg,${mix(s.warna[0],"#ffffff",.2)},${s.warna[1]})">${s.romawi}</span>
+     <div><h2>Semester ${s.romawi} — ${s.sks} sks</h2><div class="sub">${s.ket}</div></div>`;
+  document.getElementById("smt-info").innerHTML =
+    (s.pkm?`Minggu kalender ke-9 diisi <b>${s.pkm.nama.replace(/ — minggu ke-9/,"")}</b> — tidak ada perkuliahan; 16 pertemuan tetap utuh. Kegiatan ini memikul CPL-8, CPL-9, dan CPL-10.`
+          :`Semester ini berisi satu mata kuliah tunggal berbobot ${s.sks} sks.`);
+  document.getElementById("kisi-mk").innerHTML="";
+  document.getElementById("buka-mk").innerHTML="";
+  papan = buatPapan({
+    kisi:"kisi-mk", buka:"buka-mk", kolom:"mk", isiKartu:isiKartuMK,
+    items: s.mk.map(m=>({
+      id:m.id, kode:kodeMK(m.id)||("MK-"+m.no), judul:m.nama,
+      warna:m.warna, ikon:m.ikon, mk:m,
+      meta:[m.sks+" sks", ...(m.p.slice(0,2)), ...(m.asesmen.length?["ASESMEN"]:[]), ...(m.kel==="PENCIRI"?["PENCIRI"]:[]), ...(D.RPS[m.id]?["RPS ✔"]:[])]
+    }))
+  });
+}
+document.getElementById("allMK").onclick=()=>papan&&papan.semua();
+document.getElementById("offMK").onclick=()=>papan&&papan.kosong();
+
+/* =========================================================
+   TAMPILAN TABEL — delapan daftar sebaran per semester
+   Kolom: NO · Nama Mata Kuliah · sks · Kode MK · Link RPS
+   Kode MK dan Link RPS dapat diisi langsung di tabel.
+   ========================================================= */
+const KUNCI_ISIAN = "obe2026-kode-rps";
+const ISIAN = {kode:{}, rps:{}};
+(function muatIsian(){
+  const tetap = window.KODE_RPS || {};
+  Object.assign(ISIAN.kode, tetap.kode||{});
+  Object.assign(ISIAN.rps,  tetap.rps||{});
+  try{ const l=JSON.parse(localStorage.getItem(KUNCI_ISIAN)||"{}");
+       Object.assign(ISIAN.kode, l.kode||{}); Object.assign(ISIAN.rps, l.rps||{}); }catch(e){}
+})();
+function simpanIsian(){
+  try{ localStorage.setItem(KUNCI_ISIAN, JSON.stringify(ISIAN)); }catch(e){}
+  ketIsian();
+}
+function jmlIsian(){
+  const n=o=>Object.values(o).filter(v=>String(v).trim()).length;
+  return {kode:n(ISIAN.kode), rps:n(ISIAN.rps)};
+}
+function ketIsian(){
+  const j=jmlIsian(), el=document.getElementById("isianKet");
+  const rpsDalam = Object.keys(D.RPS).length;
+  el.innerHTML = `Kode MK terisi <b>${j.kode}/52</b> · tautan RPS terisi <b>${j.rps}/52</b>`
+    + (rpsDalam?` · <b>${rpsDalam}</b> RPS sudah tertulis lengkap di dalam situs ini`:"")
+    + ` — isian disimpan di browser ini saja; tekan <b>Simpan tetap</b> agar ikut terbawa saat paket dibagikan.`;
+}
+function kodeMK(id){ return (ISIAN.kode[id]||"").trim(); }
+
+const semuaMK = {};
+SMT.forEach(s=>s.mk.forEach(m=>semuaMK[m.id]=m));
+
+function barisTabel(m, no){
+  const adaRps = !!D.RPS[m.id];
+  const tautan = (ISIAN.rps[m.id]||"").trim();
+  const selRps = adaRps
+    ? `<button class="lnk ada" data-panel="${m.id}" title="RPS lengkap sudah tertulis di dalam situs ini">🔗 Buka RPS</button>
+       <div class="lnknote">tersedia di dalam situs</div>`
+    : `<div class="rpscell">
+         <input class="isi url" data-u="${m.id}" value="${tautan.replace(/"/g,"&quot;")}" placeholder="tempel tautan RPS…" aria-label="Tautan RPS ${m.nama}">
+         <button class="lnk buka" data-buka="${m.id}" title="Buka tautan" ${tautan?"":"disabled"}>↗</button>
+       </div>`;
+  return `<tr data-baris="${m.id}">
+    <td class="c">${no}</td>
+    <td><button class="namamk" data-mk="${m.id}" title="Tekan untuk membuka rincian dan mendengarkannya">${m.nama}</button>
+        ${m.kel==="PENCIRI"?' <span class="tag s" style="background:#2E7D32">PENCIRI</span>':""}
+        ${m.asesmen.length?' <span class="tag s" style="background:#C62828">ASESMEN</span>':""}</td>
+    <td class="c nm">${m.sks}</td>
+    <td class="c"><input class="isi kode" data-k="${m.id}" value="${kodeMK(m.id).replace(/"/g,"&quot;")}" placeholder="TMA …" aria-label="Kode MK ${m.nama}"></td>
+    <td class="c">${selRps}</td></tr>`;
+}
+
+function buatTabel(){
+  const host=document.getElementById("daftar-smt");
+  host.innerHTML = SMT.map((s,i)=>`
+   ${i>0?'<div class="flow"><span></span></div>':''}
+   <section class="lvl tsmt">
+     <div class="ghead">
+       <span class="gnum" style="background:linear-gradient(140deg,${mix(s.warna[0],"#ffffff",.2)},${s.warna[1]})">${s.romawi}</span>
+       <div><h2>Semester ${s.romawi}</h2><div class="sub">${s.ket}</div></div>
+       <button class="spk spk-baris" type="button" data-spk="${s.id}" aria-pressed="false"
+               title="Dengarkan sebaran semester ${s.romawi}">
+         <svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9c1.5 1.5 1.5 4.5 0 6M19 6c3 3 3 9 0 12"/></svg></button>
+     </div>
+     <div class="tbox"><table class="t daftar" style="--c2:${s.warna[1]}">
+       <thead><tr>
+         <th class="c" style="width:46px">NO</th>
+         <th>Nama Mata Kuliah</th>
+         <th class="c" style="width:52px">sks</th>
+         <th class="c" style="width:128px">Kode MK</th>
+         <th class="c" style="width:208px">Link RPS</th>
+       </tr></thead>
+       <tbody>${s.mk.map((m,j)=>barisTabel(m,j+1)).join("")}
+         ${s.pkm?`<tr class="pkm"><td class="c">★</td><td>${s.pkm.nama}</td><td class="c">—</td><td class="c">—</td><td class="c">—</td></tr>`:""}
+       </tbody>
+       <tfoot><tr><td colspan="2">Jumlah</td><td class="c">${s.mk.reduce((a,m)=>a+(+m.sks||0),0)}</td><td class="c">—</td><td class="c">—</td></tr></tfoot>
+     </table></div>
+     <div class="open" id="buka-t-${i}"></div>
+   </section>`).join("");
+
+  const tot = SMT.reduce((a,s)=>a+s.mk.reduce((b,m)=>b+(+m.sks||0),0),0);
+  const totMK = SMT.reduce((a,s)=>a+s.mk.length,0);
+  document.getElementById("total-sks").innerHTML = `
+    <div class="totbox">
+      <span class="pil"><b>${totMK}</b> mata kuliah</span>
+      <span class="pil"><b>${tot}</b> sks seluruhnya</span>
+      ${SMT.map(s=>`<span class="pil kecil">${s.romawi} <b>${s.mk.reduce((a,m)=>a+(+m.sks||0),0)}</b></span>`).join("")}
+    </div>
+    <p class="jejak">Angka Jumlah dihitung langsung dari data, bukan diketik — tidak mungkin keliru menjumlah.
+      Baris ★ PKM / PKTOS tidak berbobot sks; kegiatan itu mengisi minggu kalender ke-9 tanpa mengurangi 16 pertemuan.</p>`;
+
+  /* nama MK → buka rincian + suara */
+  host.querySelectorAll("[data-mk]").forEach(b=>b.onclick=()=>bukaRinci(b.dataset.mk));
+  host.querySelectorAll("[data-panel]").forEach(b=>b.onclick=()=>bukaRinci(b.dataset.panel,true));
+  /* tombol suara tiap semester */
+  host.querySelectorAll("[data-spk]").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.spk;
+    if(SUARA.sedangPutar(id)) SUARA.hentikan(); else SUARA.putar(id, D.TEKS_SUARA[id]);
+  });
+  /* isian kode MK */
+  host.querySelectorAll("input.kode").forEach(inp=>{
+    inp.oninput=()=>{ ISIAN.kode[inp.dataset.k]=inp.value; simpanIsian(); };
+  });
+  /* isian tautan RPS */
+  host.querySelectorAll("input.url").forEach(inp=>{
+    inp.oninput=()=>{
+      ISIAN.rps[inp.dataset.u]=inp.value; simpanIsian();
+      const b=host.querySelector(`[data-buka="${inp.dataset.u}"]`);
+      if(b) b.disabled = !inp.value.trim();
+    };
+  });
+  host.querySelectorAll("[data-buka]").forEach(b=>b.onclick=()=>{
+    const u=(ISIAN.rps[b.dataset.buka]||"").trim(); if(u) window.open(u,"_blank","noopener");
+  });
+  ketIsian();
+}
+
+/* rincian satu MK, terbuka tepat di bawah tabel semesternya */
+let rinciAktif=null;
+function bukaRinci(id, keRps){
+  const m=semuaMK[id]; if(!m) return;
+  const kotak=document.getElementById("buka-t-"+(m.smtNo-1));
+  document.querySelectorAll('[id^="buka-t-"]').forEach(k=>{ if(k!==kotak) k.innerHTML=""; });
+  document.querySelectorAll(".namamk").forEach(b=>b.classList.toggle("aktif", b.dataset.mk===id && rinciAktif!==id));
+  if(rinciAktif===id && !keRps){ kotak.innerHTML=""; rinciAktif=null; SUARA.hentikan(); return; }
+  rinciAktif=id;
+  kotak.innerHTML=`<div class="card" style="--c1:${m.warna[0]};--c2:${m.warna[1]}">
+     <div class="dh"><span class="dot"></span><b>${m.nama}</b>
+       <button class="pick" data-tutup="1" style="margin-left:auto">Tutup ✕</button></div>
+     ${isiKartuMK({mk:m})}</div>`;
+  kotak.querySelector("[data-tutup]").onclick=()=>{kotak.innerHTML="";rinciAktif=null;SUARA.hentikan();
+    document.querySelectorAll(".namamk").forEach(b=>b.classList.remove("aktif"));};
+  document.querySelectorAll(".namamk").forEach(b=>b.classList.toggle("aktif", b.dataset.mk===id));
+  SUARA.putar(id, D.TEKS_SUARA[id]);
+  const det=kotak.querySelector("details");
+  if(keRps && det){ det.open=true; setTimeout(()=>det.scrollIntoView({behavior:"smooth",block:"center"}),120); }
+  else setTimeout(()=>kotak.scrollIntoView({behavior:"smooth",block:"nearest"}),120);
+}
+document.getElementById("tutupRinci").onclick=()=>{
+  document.querySelectorAll('[id^="buka-t-"]').forEach(k=>k.innerHTML="");
+  document.querySelectorAll(".namamk").forEach(b=>b.classList.remove("aktif"));
+  rinciAktif=null; SUARA.hentikan();
+};
+
+/* ---------- salin · cetak · simpan tetap · hapus ---------- */
+document.getElementById("salinTabel").onclick=async()=>{
+  const baris=[];
+  SMT.forEach(s=>{
+    baris.push(`Semester ${s.romawi}`);
+    baris.push(["NO","Nama Mata Kuliah","sks","Kode MK","Link RPS"].join("\t"));
+    s.mk.forEach((m,j)=>baris.push([j+1,m.nama,m.sks,kodeMK(m.id)||"",
+      D.RPS[m.id]?"(di dalam situs)":(ISIAN.rps[m.id]||"")].join("\t")));
+    baris.push(["","Jumlah",s.mk.reduce((a,m)=>a+(+m.sks||0),0),"",""].join("\t"));
+    baris.push("");
+  });
+  baris.push(["","TOTAL",SMT.reduce((a,s)=>a+s.mk.reduce((b,m)=>b+(+m.sks||0),0),0),"",""].join("\t"));
+  const teks=baris.join("\n");
+  let ok=false;
+  try{ await navigator.clipboard.writeText(teks); ok=true; }catch(e){
+    const ta=document.createElement("textarea"); ta.value=teks; ta.style.position="fixed"; ta.style.opacity=0;
+    document.body.appendChild(ta); ta.select();
+    try{ ok=document.execCommand("copy"); }catch(e2){}
+    ta.remove();
+  }
+  lapor(ok?"Delapan tabel sudah disalin. Tempel langsung ke Word atau Excel — kolomnya akan terpisah sendiri."
+          :"Browser ini menolak menyalin. Gunakan tombol Cetak, atau pilih tabelnya dengan tetikus lalu Ctrl+C.");
+};
+document.getElementById("cetakTabel").onclick=()=>window.print();
+document.getElementById("simpanTetap").onclick=()=>{
+  const rapi=o=>Object.keys(o).filter(k=>String(o[k]).trim())
+    .sort((a,b)=>+a.slice(3)-(+b.slice(3)))
+    .map(k=>`    ${JSON.stringify(k)}: ${JSON.stringify(String(o[k]).trim())}`).join(",\n");
+  const kini=new Date().toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"});
+  const isi=`/* =========================================================
+   KODE MATA KULIAH & TAUTAN RPS
+   Diekspor dari laman "Struktur MK" pada ${kini}.
+   Timpakan berkas ini ke aset/kode-rps.js agar isiannya
+   tersimpan tetap dan ikut terbawa saat paket dibagikan.
+   ========================================================= */
+window.KODE_RPS = {
+  kode: {
+${rapi(ISIAN.kode)}
+  },
+  rps: {
+${rapi(ISIAN.rps)}
+  }
+};
+`;
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([isi],{type:"text/javascript;charset=utf-8"}));
+  a.download="kode-rps.js"; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  lapor("Berkas <b>kode-rps.js</b> sudah diunduh. Timpakan ke folder <code>aset/</code> di dalam paket, maka kode MK dan tautan RPS tersimpan tetap.");
+};
+document.getElementById("hapusIsian").onclick=()=>{
+  if(!confirm("Hapus kode MK dan tautan RPS yang Bapak isi di browser ini?\n\nIsian yang sudah tersimpan di aset/kode-rps.js tidak ikut terhapus.")) return;
+  try{ localStorage.removeItem(KUNCI_ISIAN); }catch(e){}
+  ISIAN.kode={}; ISIAN.rps={};
+  Object.assign(ISIAN.kode, (window.KODE_RPS||{}).kode||{});
+  Object.assign(ISIAN.rps,  (window.KODE_RPS||{}).rps||{});
+  buatTabel(); lapor("Isian di browser ini sudah dihapus.");
+};
+function lapor(pesan){
+  const el=document.getElementById("isianKet");
+  el.innerHTML=`<b style="color:#1b5e20">✔</b> ${pesan}`;
+  setTimeout(ketIsian,6000);
+}
+
+/* ---------- sakelar Tabel / Kartu ---------- */
+const bT=document.getElementById("mTabel"), bK=document.getElementById("mKartu");
+function pakaiMode(mode){
+  const tabel = mode==="tabel";
+  bT.setAttribute("aria-pressed",tabel); bK.setAttribute("aria-pressed",!tabel);
+  document.getElementById("tampil-tabel").hidden=!tabel;
+  document.getElementById("tampil-kartu").hidden=tabel;
+  document.getElementById("modeket").innerHTML = tabel
+    ? "Daftar sebaran per semester — siap disalin ke Buku Kurikulum. Tekan nama mata kuliah untuk rinciannya."
+    : "Tombol hidup-mati bergambar — untuk presentasi di depan kelas atau asesor.";
+  SUARA.hentikan();
+  try{ localStorage.setItem("obe2026-mode-mk", mode); }catch(e){}
+  if(!tabel && !papan) pilihSmt(0);
+}
+bT.onclick=()=>pakaiMode("tabel");
+bK.onclick=()=>pakaiMode("kartu");
+
+buatTabel();
+let modeAwal="tabel";
+try{ const m=localStorage.getItem("obe2026-mode-mk"); if(m==="kartu"||m==="tabel") modeAwal=m; }catch(e){}
+pakaiMode(modeAwal);
+
+pasangFooter("Sumber: dokumen Project <i>Struktur Mata Kuliah Kurikulum</i> (52 MK · 146 sks FINAL) · <i>Peta Kurikulum IRMA</i> v4 · <i>Assessment Plan dan Rubrik</i> Tahap 1 · <i>RPS Semester I — Persiapan dan Pola</i>");
+</script>
+</body>
+</html>

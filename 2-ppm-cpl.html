@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PPM & CPL — Kurikulum OBE D4 Teknik Manufaktur 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="aset/gaya.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header id="kop"></header>
+  <nav id="menu" aria-label="Menu enam laman"></nav>
+  <div id="bilah"></div>
+  <div id="intro"></div>
+
+  <div class="controls">
+    <button class="ctl" id="allPPM">Semua PPM ON</button>
+    <button class="ctl" id="allCPL">Semua CPL ON</button>
+    <button class="ctl" id="offAll">Semua OFF</button>
+    <button class="ctl" id="seq" aria-pressed="false">▶ Putar berurutan</button>
+  </div>
+
+  <section class="lvl">
+    <div class="ghead"><span class="gnum" style="background:linear-gradient(140deg,#90CAF9,#1565C0)">1</span>
+      <div><h2>Profil Profesional Mandiri (PPM)</h2><div class="sub">Kompetensi 3–5 tahun setelah lulus · 4 profil</div></div></div>
+    <div id="pengantar-ppm"></div>
+    <div id="kisi-ppm"></div>
+    <div id="buka-ppm"></div>
+  </section>
+
+  <div class="flow"><span></span></div>
+
+  <section class="lvl">
+    <div class="ghead"><span class="gnum" style="background:linear-gradient(140deg,#FFB74D,#E8590C)">2</span>
+      <div><h2>Capaian Pembelajaran Lulusan (CPL)</h2><div class="sub">10 CPL · selaras Sydney Accord SA1–SA11 / SK1–SK9 · KKNI Jenjang 6</div></div></div>
+    <div id="kisi-cpl"></div>
+    <div id="buka-cpl"></div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<script src="aset/logo.js"></script>
+<script src="aset/ikon.js"></script>
+<script src="aset/data.js"></script>
+<script src="aset/suara.js"></script>
+<script src="aset/umum.js"></script>
+<script>
+pasangKop("PPM dan CPL", "Kurikulum OBE D4 Teknik Manufaktur 2026 · Laman 2 dari 6");
+pasangMenu(2);
+SUARA.bilahSuara("bilah");
+pasangIntro("intro","target",["#4FC3F7","#1565C0"],"Laman 2 — PPM & CPL",
+  "Empat <b>Profil Profesional Mandiri</b> menyatakan akan menjadi apa lulusan dalam tiga sampai lima tahun setelah lulus; sepuluh <b>Capaian Pembelajaran Lulusan</b> menyatakan apa yang diukur pada saat ia lulus. Keduanya memakai <b>tombol hidup-mati</b>: tekan sekali — tombol masuk ke dalam, lampu hijau menyala, rumusan lengkapnya terbuka, dan suaranya dibacakan. Tekan sekali lagi untuk menutup.");
+
+const T = window.KURIKULUM.tingkat;
+const tPPM = T.find(t=>t.id==="ppm"), tCPL = T.find(t=>t.id==="cpl");
+
+document.getElementById("pengantar-ppm").innerHTML =
+ `<div class="card" style="--c1:#BBDEFB;--c2:#1565C0;margin-bottom:14px"><p style="font-style:italic">${tPPM.pengantar}</p></div>`;
+
+function siap(t){ return t.item.map(x=>({
+  id:x.id, kode:x.id, judul:x.judul, warna:x.warna, ikon:x.ikon, teks:x.teks,
+  meta:x.tag||[], audio:x.audio })); }
+
+const isiKartu = x => `<p style="font-size:${x.id.startsWith("PPM")?"15.5px":"15px"};line-height:1.6">${x.teks}</p>`
+  + (x.meta.length?`<div class="tags">${x.meta.map(g=>`<span class="tag ${x.id.startsWith("PPM")?"s":""}">${g}</span>`).join("")}</div>`:"");
+
+const itemPPM = siap(tPPM), itemCPL = siap(tCPL);
+itemPPM.concat(itemCPL).forEach(x=>SUARA.daftar(x.id, x.audio));
+
+const papanPPM = buatPapan({kisi:"kisi-ppm", buka:"buka-ppm", items:itemPPM, kolom:"ppm", isiKartu});
+const papanCPL = buatPapan({kisi:"kisi-cpl", buka:"buka-cpl", items:itemCPL, kolom:"cpl", isiKartu});
+
+document.getElementById("allPPM").onclick=()=>{henti();papanPPM.semua();};
+document.getElementById("allCPL").onclick=()=>{henti();papanCPL.semua();};
+document.getElementById("offAll").onclick=()=>{henti();papanPPM.kosong();papanCPL.kosong();};
+
+/* ---------- putar berurutan: PPM-1..4 → CPL-1..10 ---------- */
+const URUT = itemPPM.concat(itemCPL);
+let seqOn=false, lastAdv=null;
+function updSeq(){const b=document.getElementById("seq");b.setAttribute("aria-pressed",seqOn);b.textContent=seqOn?"■ Hentikan urutan":"▶ Putar berurutan";}
+function henti(){ seqOn=false; updSeq(); }
+function papanDari(id){ return id.startsWith("PPM")?papanPPM:papanCPL; }
+function majukan(id){
+  if(!seqOn || lastAdv===id) return; lastAdv=id;
+  const i=URUT.findIndex(x=>x.id===id);
+  if(i<0||i===URUT.length-1){ henti(); return; }
+  setTimeout(()=>{ if(!seqOn) return;
+    const nx=URUT[i+1].id;
+    papanDari(nx).pindah(nx,true);
+    document.querySelector(`[data-id="${nx}"]`)?.scrollIntoView({behavior:"smooth",block:"center"});
+  },600);
+}
+document.getElementById("seq").onclick=()=>{
+  seqOn=!seqOn; updSeq();
+  if(seqOn){ lastAdv=null; papanPPM.kosong(); papanCPL.kosong(); seqOn=true; updSeq();
+    papanPPM.pindah(URUT[0].id,true); }
+  else SUARA.hentikan();
+};
+/* saat satu butir selesai dibacakan, lanjut ke butir berikutnya */
+let sebelum=null;
+SUARA.pendengar.push(aktif=>{
+  if(seqOn && sebelum && !aktif) majukan(sebelum);
+  if(aktif) sebelum=aktif;
+});
+
+pasangFooter("Sumber naskah: PPM v3 (empat profil) · CPL v2 FINAL (sepuluh capaian, lima matriks verifikasi) · Sydney Accord Graduate Attributes untuk Engineering Technologist");
+</script>
+</body>
+</html>
